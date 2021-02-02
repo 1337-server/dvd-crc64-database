@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Search{% endblock %}
+
+{% block nav %}{{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center">
+    <div class="row" style="flex-wrap: nowrap">
+        <form class="needs-validation" action="/api/v1/?mode=rk" method="post">
+			<div class="input-group mb-3">
+				<div class="input-group-prepend">
+					<span class="input-group-text" id="email">Email</span>
+				</div>
+				<input type="text" class="form-control" aria-label="email" name="email" value="" aria-describedby="email" required>
+			    <div class="invalid-tooltip">
+					Email can't be blank
+				</div>
+			</div>
+			<button class="btn btn-info btn-lg btn-block" type="submit">Request Key</button>
+		</form>
+	</div>
+</div>
+
+{% endblock %}

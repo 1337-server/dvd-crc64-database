@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block nav %}{{ super() }}{% endblock %}
+
+{% block content %}
+<style>
+div.card-body button,div.card-body a{
+	margin: 0.1rem;
+}
+</style>
+<div class="container-fluid h-100 mx-auto jumbotron">
+	<div class="row">
+        <div class="col-sm-12 rounded text-center">
+            <img src="/static/img/arm80.png">
+            <p class="text-center">
+				<h2>Welcome to your Automatic Ripping Machine CRC64 database API</h2>
+				Search access to the database doesnt require a api key.
+				Only adding to the database requires a key.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block js %}{{ super() }}{% endblock %}

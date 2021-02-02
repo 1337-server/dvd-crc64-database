@@ -1,2 +1,2 @@
 # dvd-crc64-database
-dvd crc64 database for Automatic ripping machine
+A database for holding DVD crc64 id's for use with automatic ripping machine

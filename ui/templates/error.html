@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+
+{% block nav %}{{ super() }}{% endblock %}
+
+{% block content %}
+    <div class="jumbotron row">
+        <div class="col-sm-3"></div>
+        <div class="col">
+            <pre>
+               \                           /
+                \                         /
+                 \                       /
+                  ]                     [    ,'|
+                  ]                     [   /  |
+                  ]___               ___[ ,'   |
+                  ]  ]\             /[  [ |:   |
+                  ]  ] \           / [  [ |:   |
+                  ]  ]  ]         [  [  [ |:   |
+                  ]  ]  ]__     __[  [  [ |:   |
+                  ]  ]  ] ]\ _ /[ [  [  [ |:   |
+                  ]  ]  ] ] (#) [ [  [  [ :===='
+                  ]  ]  ]_].nHn.[_[  [  [
+                  ]  ]  ]  HHHHH. [  [  [
+                  ]  ] /   `HH("N  \ [  [
+                  ]__]/     HHH  "  \[__[
+                  ]         NNN         [
+                  ]         N/"         [
+                  ]         N H         [
+                 /          N            \
+                /           q,            \
+               /                           \
+            </pre>
+        </div>
+        <div class="col-sm-4"></div>
+    <div class="row text-center w-100 p-3">
+        <div class="col">
+            <p>
+                <h1>Oops! Looks like the page doesn't exist anymore</h1>
+                <a href="{{ url_for('home') }}"><p>Click Here</a> to go to the Home Page
+            </p>
+        </div>
+    </div>
+ </div>
+{% endblock %}
