@@ -58,21 +58,21 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     # Find any crc matching what the user gave us
     posts = db.session.query(Job).filter_by(crc_id=crc).first()
     if bool(posts):
-        print(1)
-        # return {'success': False, 'mode': 'post', "Error": "DVD with that CRC64 exists"}
+        return {'success': False, 'mode': 'post', "Error": "DVD with that CRC64 exists"}
 
     # Make sure we have enough to add to the db
     if crc is None or crc == "" or title is None or year is None:
         return {'success': False, 'mode': 'post', "Error": "Not enough information"}
-    job = Job(crc, title, re.sub("[^0-9]", "", year))
+
+    job = Job(crc, title, year)
     job.user_id = api_key
     job.video_type = video_type
 
-    job.imdb_id = re.sub("[^a-zA-Z0-9-]", "", imdb) if imdb is not None else ""
-    job.tmdb_id = re.sub("[^a-zA-Z0-9-]", "", tmdb) if tmdb is not None else ""
-    job.omdb_id = re.sub("[^a-zA-Z0-9-]", "", omdb) if omdb is not None else ""
+    job.imdb_id = imdb
+    job.tmdb_id = tmdb
+    job.omdb_id = omdb
 
-    job.hasnicetitle = hasnicetitle
+    job.hasnicetitle = bool(hasnicetitle)
     job.disctype = disctype
     job.label = label
     job.validated = False
@@ -82,16 +82,17 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     try:
         db.session.commit()
         success = True
-    except Exception:
+    except Exception as e:
         success = False
-    return {'success': success, 'mode': 'search', 'results': x}
+        print(e)
+        db.session.rollback()
+    return {'success': success, 'mode': 'post', 'results': x}
 
 
 def request_key(email):
     # TODO: api_key should be send to the email address
     #  displaying it in browser allows the system to be easily manipulated
     success = False
-    x = hashlib.sha224(email.encode('utf-8')).hexdigest()
     print(x)
     api_key = ApiKeys(x)
     db.session.add(api_key)
@@ -125,10 +126,8 @@ def get_burner_email_domains():
 
 
 def send_api_key(email, api_key):
-    sender_email = ""
     receiver_email = email
     # Your app password - you need to create one in your gmail
-    password = ""
 
     message = MIMEMultipart("alternative")
     message["Subject"] = "Automatic ripping machine - api key"
