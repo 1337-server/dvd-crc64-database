@@ -1,4 +1,5 @@
 import hashlib
+import json
 import re
 import smtplib
 import ssl
@@ -6,6 +7,7 @@ import urllib
 
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
 from models.models import Job, ApiKeys
 from ui import app, db
 
@@ -13,20 +15,20 @@ from ui import app, db
 def search(find_crc):
     """ Queries ARMui db for the movie/show matching the query"""
     new_crc = re.sub('[^a-zA-Z0-9-]', '', find_crc)
-    print("search - q=" + str(new_crc))
+    # print("search - q=" + str(new_crc))
     posts = db.session.query(Job).filter_by(crc_id=new_crc)
     # posts = Job.query.get(crc_id=new_crc)
-    print("search - posts=" + str(posts))
+    # print("search - posts=" + str(posts))
     r = {}
     i = 0
     for p in posts:
-        print("job obj = " + str(p.get_d()))
+        # print("job obj = " + str(p.get_d()))
         x = p.get_d().items()
         r[i] = {}
         for key, value in iter(x):
-            if key != 'user_id':
+            if key != 'user_id' and key != "job_id":
                 r[i][str(key)] = str(value)
-                print(str(key) + "= " + str(value))
+                # print(str(key) + "= " + str(value))
         i += 1
     success = False if i < 1 else True
     return {'success': success, 'mode': 'search', 'results': r}
@@ -34,7 +36,7 @@ def search(find_crc):
 
 def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, disctype, label):
     """
-    Adds a new entry to the database
+    Adds a new entry to the database if data passes validation
     :param api_key: the users api key - Do not let user add data without this!
     :param crc: the crc64 of dvd
     :param title: title of dvd
@@ -49,7 +51,7 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     :return:
     """
     if api_key is None or api_key == "":
-        return {'success': False, 'mode': 'post', "Error": "Not authorised"}
+        return {'success': False, 'mode': 'post', "Error": "Not authorised1"}
 
     valid = db.session.query(ApiKeys).filter_by(key=api_key).first()
     if not bool(valid):
@@ -69,6 +71,11 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     if not imdb and not tmdb:
         return {'success': False, 'mode': 'post', "Error": "At least 1 external id is required"}
 
+    results = call_omdb_api("", "", imdb,"short")
+    print(f"r = {results}")
+    if results['Title'].lower() != title.strip().lower() or results['Year'] != year:
+        return {'success': False, 'mode': 'post', "Error": "information provided doesnt match imdb"}
+
     job = Job(crc, title, year)
     job.user_id = api_key
     job.video_type = video_type
@@ -82,7 +89,7 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     job.label = label
     job.validated = False
     x = job.get_d()
-    print(f" x = {x}")
+    # print(f" x = {x}")
     db.session.add(job)
     try:
         db.session.commit()
@@ -97,7 +104,7 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
 def request_key(email):
     success = False
     x = hashlib.sha224(email.encode('utf-8')).hexdigest()  # This is not the ways its done on live, but for demo
-    print(x)
+    # print(x)
     api_key = ApiKeys(x)
     db.session.add(api_key)
     try:
@@ -124,8 +131,6 @@ def get_burner_email_domains():
     """
     url = "https://raw.githubusercontent.com/wesbos/burner-email-providers/master/emails.txt"
     x = fetch_url(url)
-    # s = open("/home/1337server/mysite/ui/emails.txt", "r")
-    # x = s.read()
     return x.split('\n')
 
 
@@ -185,3 +190,36 @@ def get_latest():
         i+=1
         # print(p.get_d())
     return x
+
+
+def call_omdb_api(title=None, year=None, imdbID=None, plot="short"):
+    """ Queries OMDbapi.org for title/year confirmation
+        This should stop any entries being added that dont match their imdb
+    """
+    omdb_api_key = ""
+
+    if not omdb_api_key:
+        print("no api key for omdb")
+    if imdbID:
+        strurl = "http://www.omdbapi.com/?i={1}&plot={2}&r=json&apikey={0}".format(omdb_api_key, imdbID, plot)
+    elif title:
+        # try:
+        title = urllib.parse.quote(title)
+        year = urllib.parse.quote(year)
+        strurl = "http://www.omdbapi.com/?s={1}&y={2}&plot={3}&r=json&apikey={0}".format(omdb_api_key,
+                                                                                         title, year, plot)
+    else:
+        print("no params")
+        return None
+
+
+    print("omdb - " + str(strurl))
+    try:
+        title_info_json = urllib.request.urlopen(strurl).read()
+        title_info = json.loads(title_info_json.decode())
+        print("omdb - " + str(title_info))
+    except urllib.error.HTTPError as e:
+        print(f"omdb call failed with error - {e}")
+        return {'Title': "",'Year':""}
+    print("omdb - call was successful")
+    return title_info
