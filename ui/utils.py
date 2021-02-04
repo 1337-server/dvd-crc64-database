@@ -64,6 +64,11 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
     if crc is None or crc == "" or title is None or year is None:
         return {'success': False, 'mode': 'post', "Error": "Not enough information"}
 
+    # Reserve this for future use of validating users post data - ie make sure submitted isn't junk
+    # - Current idea is calling imdb or tmdb to validate that id matches with the title/year the user is trying to add
+    if not imdb and not tmdb:
+        return {'success': False, 'mode': 'post', "Error": "At least 1 external id is required"}
+
     job = Job(crc, title, year)
     job.user_id = api_key
     job.video_type = video_type
@@ -167,3 +172,14 @@ def send_api_key(email, api_key):
             sender_email, receiver_email, message.as_string()
         )
     print("finished sending mail")
+
+
+def get_latest():
+    c=db.session.query(Job).order_by(Job.job_id.desc()).limit(5)
+    i=1
+    x={}
+    for p in c:
+        x[i]=p.get_d()
+        i+=1
+        # print(p.get_d())
+    return x
