@@ -95,9 +95,8 @@ def post(api_key, crc, title, year, video_type, imdb, tmdb, omdb, hasnicetitle, 
 
 
 def request_key(email):
-    # TODO: api_key should be send to the email address
-    #  displaying it in browser allows the system to be easily manipulated
     success = False
+    x = hashlib.sha224(email.encode('utf-8')).hexdigest()  # This is not the ways its done on live, but for demo
     print(x)
     api_key = ApiKeys(x)
     db.session.add(api_key)
@@ -131,8 +130,11 @@ def get_burner_email_domains():
 
 
 def send_api_key(email, api_key):
+    # Your app password - you need to create one in your gmail
+    sender_email = "your.email@gmail.com"
     receiver_email = email
     # Your app password - you need to create one in your gmail
+    password = "app_password_key"
 
     message = MIMEMultipart("alternative")
     message["Subject"] = "Automatic ripping machine - api key"
