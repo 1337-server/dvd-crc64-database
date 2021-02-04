@@ -49,6 +49,8 @@ def feed_json():
             j = utils.request_key(email)
         else:
             j = {'success': False, 'message': 'email isn\'t valid'}
+    elif x == "latest":
+        j = utils.get_latest()
     else:
         return {'success': False, 'message': 'nothing here'}
 
